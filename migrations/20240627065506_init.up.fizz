@@ -1,0 +1,23 @@
+create_table("users") {
+    t.Column("id", "integer", {"primary": true})
+    t.Column("surname", "string", {})
+    t.Column("name", "string", {})
+    t.Column("patronymic", "string", {"null": true})
+    t.Column("address", "string", {})
+    t.Column("passport_serie", "integer", {})
+    t.Column("passport_number", "integer", {})
+}
+
+create_table("tasks") {
+    t.Column("id", "integer", {"primary": true})
+    t.Column("name", "string", {})
+    t.Column("description", "string", {})
+}
+
+create_table("task_binds") {
+    t.Column("id", "integer", {"primary": true})
+    t.Column("task_id", "integer", {})
+    t.Column("user_id", "integer", {})
+    t.Column("start_at", "timestamp", {})
+    t.Column("finish_at", "timestamp", {})
+}

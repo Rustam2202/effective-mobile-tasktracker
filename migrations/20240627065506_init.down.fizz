@@ -1,0 +1,3 @@
+drop_table("task_binds")
+drop_table("tasks")
+drop_table("users")
