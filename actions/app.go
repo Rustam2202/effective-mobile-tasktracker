@@ -4,10 +4,8 @@ import (
 	"sync"
 
 	"tasktracker/locales"
-	"tasktracker/models"
 
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/middleware/contenttype"
 	"github.com/gobuffalo/middleware/forcessl"
@@ -53,7 +51,7 @@ func App() *buffalo.App {
 		})
 
 		// Automatically redirect to SSL
-		app.Use(forceSSL())
+		// app.Use(forceSSL())
 
 		// Log request parameters (filters apply).
 		app.Use(paramlogger.ParameterLogger)
@@ -64,8 +62,28 @@ func App() *buffalo.App {
 		// Wraps each request in a transaction.
 		//   c.Value("tx").(*pop.Connection)
 		// Remove to disable this.
-		app.Use(popmw.Transaction(models.DB))
+		// app.Use(popmw.Transaction(models.DB))
+		// app.GET("/", HomeHandler)
+		// // Middleware
+		// app.Use(forceSSL())
+		// app.Use(paramlogger.ParameterLogger)
+		// app.Use(contenttype.Set("application/json"))
+		// app.Use(popmw.Transaction(models.DB))
+
+		// Routes
 		app.GET("/", HomeHandler)
+
+		// User routes
+		app.GET("/users/", GetAllUsers)
+		app.GET("/users/{passportSerie,passportNumber}", GetUserByPassport) // List users with filtering and pagination
+		app.POST("/users", CreateUser)                                      // Add a new user
+		app.PUT("/users/{user_id}", UpdateUser)                             // Update user data
+		app.DELETE("/users/{user_id}", DeleteUser)                          // Delete a user
+
+		// Task time tracking routes
+		app.POST("/tasks/start", StartTaskOfUser) // Start time tracking for a task
+		app.POST("/tasks/stop", StartTaskOfUser)  // Stop time tracking for a task
+		app.GET("/tasks", GetTimeUsersTask)       // Get time tracking for a task
 	})
 
 	return app
