@@ -6,6 +6,8 @@ create_table("users") {
     t.Column("address", "string", {})
     t.Column("passport_serie", "integer", {})
     t.Column("passport_number", "integer", {})
+    t.Column("created_at", "timestamp", {})
+    t.Column("updated_at", "timestamp", {})
 }
 
 create_table("tasks") {

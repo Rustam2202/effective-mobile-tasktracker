@@ -3,11 +3,12 @@ package actions
 import (
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"tasktracker/models"
 
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/pop/v6"
 )
 
 func GetAllUsers(c buffalo.Context) error {
@@ -113,47 +114,102 @@ func GetUserByPassport(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.JSON(user))
 }
 
+type createUserRequest struct {
+	Name          string `json:"name"`
+	Surname       string `json:"surname"`
+	Patronymic    string `json:"patronymic"`
+	PassportNuber string `json:"passportNumber"`
+	Address       string `json:"address"`
+}
+
 func CreateUser(c buffalo.Context) error {
-}
-
-// Update changes a User in the DB. This function is mapped to
-// the path PUT /users/{user_id}
-func UpdateUser(c buffalo.Context) error {
-	tx := c.Value("tx").(*pop.Connection)
-	user := &models.User{}
-	if err := tx.Find(user, c.Param("user_id")); err != nil {
-		return err
-	}
-
-	// Bind user to the incoming request payload
-	if err := c.Bind(user); err != nil {
-		return err
-	}
-
-	verrs, err := tx.ValidateAndUpdate(user)
+	var userReq createUserRequest
+	err := c.Bind(&userReq)
 	if err != nil {
-		return err
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
-	if verrs.HasAny() {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
+	splitNumber := strings.Split(userReq.PassportNuber, " ")
+	if len(splitNumber) != 2 {
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
+	}
+	passSer, err := strconv.Atoi(splitNumber[0])
+	if err != nil {
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
+	}
+	passNumb, err := strconv.Atoi(splitNumber[1])
+	if err != nil {
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
+	}
+
+	user := models.User{
+		Name:           userReq.Name,
+		Surname:        userReq.Surname,
+		Patronymic:     userReq.Patronymic,
+		PassportSerie:  passSer,
+		PassportNumber: passNumb,
+		Address:        userReq.Address,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+
+	err = models.DB.Create(&user)
+	if err != nil {
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
 	return c.Render(http.StatusOK, r.JSON(user))
 }
 
-// Destroy deletes a User from the DB. This function is mapped
-// to the path DELETE /users/{user_id}
-func DeleteUser(c buffalo.Context) error {
-	tx := c.Value("tx").(*pop.Connection)
-	user := &models.User{}
-	if err := tx.Find(user, c.Param("user_id")); err != nil {
-		return err
+type updateUserRequest struct {
+	ID             int       `json:"id"`
+	Surname        string    `json:"surname"`
+	Name           string    `json:"name"`
+	Patronymic     string    `json:"patronymic"`
+	Address        string    `json:"address"`
+	PassportSerie  int       `json:"passport_serie"`
+	PassportNumber int       `json:"passport_number"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+func UpdateUser(c buffalo.Context) error {
+	var userReq updateUserRequest
+	err := c.Bind(&userReq)
+	if err != nil {
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
-	if err := tx.Destroy(user); err != nil {
-		return err
+	user := &models.User{}
+	if err := models.DB.Find(user, c.Param("user_id")); err != nil {
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
+	}
+
+	user.Name = userReq.Name
+	user.Surname = userReq.Surname
+	user.Patronymic = userReq.Patronymic
+	user.PassportSerie = userReq.PassportSerie
+	user.PassportNumber = userReq.PassportNumber
+	user.Address = userReq.Address
+	user.CreatedAt = userReq.CreatedAt
+	user.UpdatedAt = time.Now()
+
+	if err := models.DB.Update(&user); err != nil {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
 	return c.Render(http.StatusOK, r.JSON(user))
+}
+
+func DeleteUser(c buffalo.Context) error {
+	id, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))
+	}
+	err = models.DB.Destroy(&models.User{ID: id})
+	if err != nil {
+		return c.Render(http.StatusNotFound, r.JSON("User not found"))
+	}
+
+	return c.Render(http.StatusOK, r.JSON("User deleted"))
 }
