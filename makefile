@@ -5,6 +5,7 @@ db:
 
 migrate:
 	soda create -e development
+	soda create -e test
 	soda migrate
 
 dev:

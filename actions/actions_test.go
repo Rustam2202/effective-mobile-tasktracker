@@ -12,10 +12,14 @@ type ActionSuite struct {
 }
 
 func Test_ActionSuite(t *testing.T) {
-	action, err := suite.NewActionWithFixtures(App(), os.DirFS("../fixtures"))
+	err := os.Setenv("GO_ENV", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
+	action := suite.NewAction(App())
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 
 	as := &ActionSuite{
 		Action: action,
