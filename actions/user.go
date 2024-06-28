@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -114,7 +115,7 @@ func CreateUser(c buffalo.Context) error {
 	}
 
 	infoURL := envy.Get("INFO_URL", "http://127.0.0.1:3000")
-	env := envy.Get("GO_ENV", "")
+	env := os.Getenv("GO_ENV")
 	if env == "test" {
 		err = models.DB.Create(&models.User{
 			Name:       "Иван",
