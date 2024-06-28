@@ -9,7 +9,6 @@ import (
 	"tasktracker/models"
 
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/pop/v6"
 )
 
 func GetAllUsers(c buffalo.Context) error {
@@ -124,11 +123,6 @@ type createUserRequest struct {
 }
 
 func CreateUser(c buffalo.Context) error {
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
-	}
-
 	var userReq createUserRequest
 	err := c.Bind(&userReq)
 	if err != nil {
@@ -159,7 +153,10 @@ func CreateUser(c buffalo.Context) error {
 		UpdatedAt:      time.Now(),
 	}
 
-	tx.Create(&user)
+	err = models.DB.Create(&user)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
 
 	return c.Render(http.StatusOK, r.JSON(user))
 }
