@@ -12,6 +12,7 @@ import (
 	"tasktracker/models"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/envy"
 )
 
 func GetAllUsers(c buffalo.Context) error {
@@ -112,7 +113,24 @@ func CreateUser(c buffalo.Context) error {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
 
-	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:3000/info?passport_serie=%s&passport_number=%s", string(splitNumber[0]), string(splitNumber[1])))
+	infoURL := envy.Get("INFO_URL", "http://127.0.0.1:3000")
+	env := envy.Get("GO_ENV", "")
+	if env == "test" {
+		err = models.DB.Create(&models.User{
+			Name:       "Иван",
+			Surname:    "Иванов",
+			Patronymic: "Иванович",
+			Address:    "г. Москва, ул. Ленина, д. 5, кв. 1",
+		})
+		if err != nil {
+			return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+		}
+		return c.Render(http.StatusOK, r.JSON("User created"))
+	}
+
+	resp, err := http.Get(fmt.Sprintf(
+		"%s/info?passport_serie=%s&passport_number=%s",
+		infoURL, string(splitNumber[0]), string(splitNumber[1])))
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}

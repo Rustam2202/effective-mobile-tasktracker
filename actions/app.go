@@ -10,7 +10,8 @@ import (
 	"github.com/gobuffalo/middleware/contenttype"
 	"github.com/gobuffalo/middleware/forcessl"
 	"github.com/gobuffalo/middleware/i18n"
-	"github.com/gobuffalo/middleware/paramlogger"
+
+	// "github.com/gobuffalo/middleware/paramlogger"
 	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
@@ -54,7 +55,9 @@ func App() *buffalo.App {
 		// app.Use(forceSSL())
 
 		// Log request parameters (filters apply).
-		app.Use(paramlogger.ParameterLogger)
+		// app.Use(paramlogger.ParameterLogger)
+
+		
 
 		// Set the request content type to JSON
 		app.Use(contenttype.Set("application/json"))
