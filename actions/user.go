@@ -1,6 +1,9 @@
 package actions
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -85,41 +88,8 @@ func GetAllUsers(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.JSON(users))
 }
 
-func GetUserByPassport(c buffalo.Context) error {
-	var err error
-
-	passSerParam := c.Param("passportSerie")
-	passSer, err := strconv.Atoi(passSerParam)
-	if err != nil {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
-	}
-	if passSer < 0 || passSer > 4 {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
-	}
-
-	passNumbParam := c.Param("passportNumber")
-	passNumb, err := strconv.Atoi(passNumbParam)
-	if err != nil {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
-	}
-	if passNumb < 0 || passNumb > 6 {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
-	}
-
-	user := &models.User{}
-	err = models.DB.Where("passport_serie = ? AND passport_number = ?", passSer, passNumb).First(&user)
-	if err != nil {
-		return c.Render(http.StatusNotFound, r.JSON("User not found"))
-	}
-	return c.Render(http.StatusOK, r.JSON(user))
-}
-
 type createUserRequest struct {
-	Name          string `json:"name"`
-	Surname       string `json:"surname"`
-	Patronymic    string `json:"patronymic"`
 	PassportNuber string `json:"passportNumber"`
-	Address       string `json:"address"`
 }
 
 func CreateUser(c buffalo.Context) error {
@@ -133,32 +103,35 @@ func CreateUser(c buffalo.Context) error {
 	if len(splitNumber) != 2 {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
-	passSer, err := strconv.Atoi(splitNumber[0])
+	_, err = strconv.Atoi(splitNumber[0])
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
 	}
-	passNumb, err := strconv.Atoi(splitNumber[1])
+	_, err = strconv.Atoi(splitNumber[1])
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
 
-	user := models.User{
-		Name:           userReq.Name,
-		Surname:        userReq.Surname,
-		Patronymic:     userReq.Patronymic,
-		PassportSerie:  passSer,
-		PassportNumber: passNumb,
-		Address:        userReq.Address,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
-
-	err = models.DB.Create(&user)
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:3000/info?passport_serie=%s&passport_number=%s", string(splitNumber[0]), string(splitNumber[1])))
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
-	return c.Render(http.StatusOK, r.JSON(user))
+	user := models.User{}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+	err = json.Unmarshal(bodyBytes, &user)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+	err = models.DB.Create(&models.User{})
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+
+	return c.Render(http.StatusOK, r.JSON("User created"))
 }
 
 type updateUserRequest struct {

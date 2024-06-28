@@ -75,10 +75,12 @@ func App() *buffalo.App {
 
 		// User routes
 		app.GET("/user/", GetAllUsers)
-		app.GET("/user/{passportSerie,passportNumber}", GetUserByPassport) // List users with filtering and pagination
-		app.POST("/user", CreateUser)                                      // Add a new user
-		app.PUT("/user/{user_id}", UpdateUser)                             // Update user data
-		app.DELETE("/user/{user_id}", DeleteUser)                          // Delete a user
+		app.GET("/user/{passportSerie,passportNumber}", GetUserByPassportDumb) // List users with filtering and pagination
+		app.POST("/user", CreateUser)                                          // Add a new user
+		app.PUT("/user/{user_id}", UpdateUser)                                 // Update user data
+		app.DELETE("/user/{user_id}", DeleteUser)                              // Delete a user
+
+		app.GET("/info", GetUserByPassportDumb)
 
 		// Task time tracking routes
 		app.POST("/task/start", StartTaskOfUser) // Start time tracking for a task
