@@ -229,10 +229,10 @@ type updateUserRequest struct {
 // @Failure 404 {string} string
 // @Router /users/{user_id} [put]
 func UpdateUser(c buffalo.Context) error {
-	var userReq updateUserRequest
-	err := c.Bind(&userReq)
+	// Получение ID пользователя из параметров запроса
+	id, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid user ID"))
 	}
 
 	tx, ok := c.Value("tx").(*pop.Connection)
@@ -240,22 +240,30 @@ func UpdateUser(c buffalo.Context) error {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
+	// Поиск пользователя в базе данных
 	user := &models.User{}
-	if err := tx.Find(user, c.Param("user_id")); err != nil {
+	if err := tx.Find(user, id); err != nil {
+		return c.Render(http.StatusNotFound, r.JSON("User not found"))
+	}
+
+	// Обновление данных пользователя из запроса
+	var userReq updateUserRequest
+	if err := c.Bind(&userReq); err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
-	user.Name = userReq.Name
+	// Обновление полей пользователя
 	user.Surname = userReq.Surname
+	user.Name = userReq.Name
 	user.Patronymic = userReq.Patronymic
+	user.Address = userReq.Address
 	user.PassportSerie = userReq.PassportSerie
 	user.PassportNumber = userReq.PassportNumber
-	user.Address = userReq.Address
-	user.CreatedAt = userReq.CreatedAt
 	user.UpdatedAt = time.Now()
 
-	if err := models.DB.Update(&user); err != nil {
-		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	// Сохранение изменений в базе данных
+	if err := tx.Update(user); err != nil {
+		return c.Render(http.StatusInternalServerError, r.JSON("Failed to update user"))
 	}
 
 	return c.Render(http.StatusOK, r.JSON(user))

@@ -77,8 +77,6 @@ func App() *buffalo.App {
 		// Log request parameters (filters apply).
 		// app.Use(paramlogger.ParameterLogger)
 
-		
-
 		// Set the request content type to JSON
 		app.Use(contenttype.Set("application/json"))
 
@@ -98,12 +96,9 @@ func App() *buffalo.App {
 
 		// User routes
 		app.GET("/user/", GetAllUsers)
-		app.GET("/user/{passportSerie,passportNumber}", GetUserByPassportDumb) // List users with filtering and pagination
-		app.POST("/user", CreateUser)                                          // Add a new user
-		app.PUT("/user/{user_id}", UpdateUser)                                 // Update user data
-		app.DELETE("/user/{user_id}", DeleteUser)                              // Delete a user
-
-		app.GET("/info", GetUserByPassportDumb)
+		app.POST("/user", CreateUser)             // Add a new user
+		app.PUT("/user/{user_id}", UpdateUser)    // Update user data
+		app.DELETE("/user/{user_id}", DeleteUser) // Delete a user
 
 		// Task time tracking routes
 		app.POST("/task/start", StartTaskOfUser) // Start time tracking for a task
@@ -112,7 +107,7 @@ func App() *buffalo.App {
 
 		// Swagger route
 		app.GET("/", HomeHandler)
-		app.GET("/swagger/{doc:.*}", buffaloSwagger.WrapHandler(swaggerFiles.Handler))	
+		app.GET("/swagger/{doc:.*}", buffaloSwagger.WrapHandler(swaggerFiles.Handler))
 	})
 
 	return app

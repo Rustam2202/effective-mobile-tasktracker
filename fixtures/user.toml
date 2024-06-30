@@ -1,0 +1,10 @@
+[[scenario]]
+name ="User test"
+[[scenario.table]]
+name = "users"
+[[scenario.table.row]]
+id = 1
+name = "User 1"
+[[scenario.table.row]]
+id = 2
+name = "User 2"
