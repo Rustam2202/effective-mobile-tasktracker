@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +15,24 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
+// @Summary Get all users
+// @Description Get a list of all users with optional filters for pagination and search
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id query integer false "User ID"
+// @Param name query string false "User name"
+// @Param surname query string false "User surname"
+// @Param patronymic query string false "User patronymic"
+// @Param passportSerie query integer false "User passport serie"
+// @Param passportNumber query integer false "User passport number"
+// @Param address query string false "User address"
+// @Param page query integer true "Page number" default(0)
+// @Param perPage query integer true "Number of users per page" default(10)
+// @Success 200 {object} models.User
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /users [get]
 func GetAllUsers(c buffalo.Context) error {
 	users := &models.User{}
 	var params []string
@@ -94,6 +111,23 @@ type createUserRequest struct {
 	PassportNuber string `json:"passportNumber"`
 }
 
+type responseUser struct {
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	Patronymic string `json:"patronymic"`
+	Address    string `json:"address"`
+}
+
+// @Summary Create a new user
+// @Description Create a new user with the provided information
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param userReq body createUserRequest true "User request body"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 500 {string} string
+// @Router /users [post]
 func CreateUser(c buffalo.Context) error {
 	var userReq createUserRequest
 	err := c.Bind(&userReq)
@@ -114,29 +148,22 @@ func CreateUser(c buffalo.Context) error {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
 
-	infoURL := envy.Get("INFO_URL", "http://127.0.0.1:3000")
-	env := os.Getenv("GO_ENV")
-	if env == "test" {
-		err = models.DB.Create(&models.User{
-			Name:       "Иван",
-			Surname:    "Иванов",
-			Patronymic: "Иванович",
-			Address:    "г. Москва, ул. Ленина, д. 5, кв. 1",
-		})
-		if err != nil {
-			return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
-		}
-		return c.Render(http.StatusOK, r.JSON("User created"))
-	}
-
-	resp, err := http.Get(fmt.Sprintf(
-		"%s/info?passport_serie=%s&passport_number=%s",
-		infoURL, string(splitNumber[0]), string(splitNumber[1])))
+	envy.Load("../.env")
+	infoURL, err := envy.MustGet("INFO_URL")
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
-	user := models.User{}
+	req := fmt.Sprintf(
+		"%s/info?passportSerie=%s&passportNumber=%s",
+		infoURL, string(splitNumber[0]), string(splitNumber[1]))
+
+	resp, err := http.Get(req)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+
+	user := responseUser{}
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
@@ -165,6 +192,17 @@ type updateUserRequest struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+// @Summary Update a user
+// @Description Update an existing user with the provided information
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user_id path integer true "User ID"
+// @Param userReq body updateUserRequest true "User request body"
+// @Success 200 {object} models.User
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /users/{user_id} [put]
 func UpdateUser(c buffalo.Context) error {
 	var userReq updateUserRequest
 	err := c.Bind(&userReq)
@@ -193,6 +231,16 @@ func UpdateUser(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.JSON(user))
 }
 
+// @Summary Delete a user
+// @Description Delete an existing user by ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user_id path integer true "User ID"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /users/{user_id} [delete]
 func DeleteUser(c buffalo.Context) error {
 	id, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {

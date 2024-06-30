@@ -1,0 +1,209 @@
+definitions:
+  actions.createUserRequest:
+    properties:
+      passportNumber:
+        type: string
+    type: object
+  actions.updateUserRequest:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      passport_number:
+        type: integer
+      passport_serie:
+        type: integer
+      patronymic:
+        type: string
+      surname:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.User:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      passport_number:
+        type: integer
+      passport_serie:
+        type: integer
+      patronymic:
+        type: string
+      surname:
+        type: string
+      updated_at:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all users with optional filters for pagination and
+        search
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        type: integer
+      - description: User name
+        in: query
+        name: name
+        type: string
+      - description: User surname
+        in: query
+        name: surname
+        type: string
+      - description: User patronymic
+        in: query
+        name: patronymic
+        type: string
+      - description: User passport serie
+        in: query
+        name: passportSerie
+        type: integer
+      - description: User passport number
+        in: query
+        name: passportNumber
+        type: integer
+      - description: User address
+        in: query
+        name: address
+        type: string
+      - default: 0
+        description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - default: 10
+        description: Number of users per page
+        in: query
+        name: perPage
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the provided information
+      parameters:
+      - description: User request body
+        in: body
+        name: userReq
+        required: true
+        schema:
+          $ref: '#/definitions/actions.createUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new user
+      tags:
+      - Users
+  /users/{user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Delete a user
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update an existing user with the provided information
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: User request body
+        in: body
+        name: userReq
+        required: true
+        schema:
+          $ref: '#/definitions/actions.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Update a user
+      tags:
+      - Users
+swagger: "2.0"

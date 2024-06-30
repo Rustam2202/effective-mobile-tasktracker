@@ -15,6 +15,9 @@ import (
 	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
+	buffaloSwagger "github.com/swaggo/buffalo-swagger" // Import the package that defines the "swagger" identifier
+	"github.com/swaggo/buffalo-swagger/swaggerFiles"
+    _ "tasktracker/docs"	
 )
 
 // ENV is used to help switch settings based on where the
@@ -40,6 +43,18 @@ var (
 // `ServeFiles` is a CATCH-ALL route, so it should always be
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
+
+// @title Swagger Example API
+// @version 1.0
+// @description This is a sample server Petstore server.
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host petstore.swagger.io
+// @BasePath /v2
 func App() *buffalo.App {
 	appOnce.Do(func() {
 		app = buffalo.New(buffalo.Options{
@@ -50,6 +65,8 @@ func App() *buffalo.App {
 			},
 			SessionName: "_tasktracker_session",
 		})
+
+		envy.Load("/.env")
 
 		// Automatically redirect to SSL
 		// app.Use(forceSSL())
@@ -89,6 +106,10 @@ func App() *buffalo.App {
 		app.POST("/task/start", StartTaskOfUser) // Start time tracking for a task
 		app.POST("/task/stop", StartTaskOfUser)  // Stop time tracking for a task
 		app.GET("/task", GetTimeUsersTask)       // Get time tracking for a task
+
+		// Swagger route
+		app.GET("/", HomeHandler)
+		app.GET("/swagger/{doc:.*}", buffaloSwagger.WrapHandler(swaggerFiles.Handler))	
 	})
 
 	return app

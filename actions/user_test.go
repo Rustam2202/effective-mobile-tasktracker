@@ -7,7 +7,7 @@ func (as *ActionSuite) Test_UserCreate() {
 	resp := as.HTML("/info").Get()
 	resp.Body.String()
 	userReq := &createUserRequest{
-		PassportNuber: "1234 567890",
+		PassportNuber: "123 567890",
 	}
 
 	res := as.JSON("/user").Post(userReq)

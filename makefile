@@ -15,4 +15,3 @@ migrate-test:
 
 dev:
 	buffalo dev
-
