@@ -4,20 +4,23 @@ import (
 	"sync"
 
 	"tasktracker/locales"
+	"tasktracker/models"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/middleware/contenttype"
 	"github.com/gobuffalo/middleware/forcessl"
 	"github.com/gobuffalo/middleware/i18n"
 
 	// "github.com/gobuffalo/middleware/paramlogger"
+	_ "tasktracker/docs"
+
 	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
-	"github.com/unrolled/secure"
 	buffaloSwagger "github.com/swaggo/buffalo-swagger" // Import the package that defines the "swagger" identifier
 	"github.com/swaggo/buffalo-swagger/swaggerFiles"
-    _ "tasktracker/docs"	
+	"github.com/unrolled/secure"
 )
 
 // ENV is used to help switch settings based on where the
@@ -82,7 +85,7 @@ func App() *buffalo.App {
 		// Wraps each request in a transaction.
 		//   c.Value("tx").(*pop.Connection)
 		// Remove to disable this.
-		// app.Use(popmw.Transaction(models.DB))
+		app.Use(popmw.Transaction(models.DB))
 		// app.GET("/", HomeHandler)
 		// // Middleware
 		// app.Use(forceSSL())

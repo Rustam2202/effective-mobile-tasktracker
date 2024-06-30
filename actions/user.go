@@ -13,6 +13,7 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
+	"github.com/gobuffalo/pop/v6"
 )
 
 // @Summary Get all users
@@ -34,8 +35,12 @@ import (
 // @Failure 404 {string} string
 // @Router /users [get]
 func GetAllUsers(c buffalo.Context) error {
-	users := &models.User{}
-	var params []string
+	users := []models.User{}
+	tx, ok := c.Value("tx").(*pop.Connection)
+	if !ok {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+	query := tx.Q()
 
 	if c.Param("id") != "" {
 		id, err := strconv.Atoi(c.Param("id"))
@@ -45,16 +50,16 @@ func GetAllUsers(c buffalo.Context) error {
 		if id < 0 {
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))
 		}
-		params = append(params, c.Param("id"))
+		query = query.Where("id = ?", id)
 	}
 	if c.Param("name") != "" {
-		params = append(params, c.Param("name"))
+		query = query.Where("name = ?", c.Param("name"))
 	}
 	if c.Param("surname") != "" {
-		params = append(params, c.Param("surname"))
+		query = query.Where("surname = ?", c.Param("surname"))
 	}
 	if c.Param("patronymic") != "" {
-		params = append(params, c.Param("patronymic"))
+		query = query.Where("patronymic = ?", c.Param("patronymic"))
 	}
 	if c.Param("passportSerie") != "" {
 		passSer, err := strconv.Atoi(c.Param("passportSerie"))
@@ -64,7 +69,7 @@ func GetAllUsers(c buffalo.Context) error {
 		if passSer < 0 || passSer > 4 {
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
 		}
-		params = append(params, c.Param("passportSerie"))
+		query = query.Where("passport_serie = ?", passSer)
 	}
 	if c.Param("passportNumber") != "" {
 		passNumb, err := strconv.Atoi(c.Param("passportNumber"))
@@ -74,13 +79,14 @@ func GetAllUsers(c buffalo.Context) error {
 		if passNumb < 0 || passNumb > 6 {
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 		}
-		params = append(params, c.Param("passportNumber"))
+		query = query.Where("passport_number = ?", passNumb)
 	}
 	if c.Param("address") != "" {
-		params = append(params, c.Param("address"))
+		query = query.Where("address = ?", c.Param("address"))
 	}
+
 	if c.Param("page") == "" {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid page number"))
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
 	}
 	page, err := strconv.Atoi(c.Param("page"))
 	if err != nil {
@@ -89,10 +95,10 @@ func GetAllUsers(c buffalo.Context) error {
 	if page < 0 {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid page number"))
 	}
-	if c.Param("perPage") == "" {
+	if c.Param("per_page") == "" {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
 	}
-	perPage, err := strconv.Atoi(c.Param("perPage"))
+	perPage, err := strconv.Atoi(c.Param("per_page"))
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
 	}
@@ -100,7 +106,7 @@ func GetAllUsers(c buffalo.Context) error {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
 	}
 
-	err = models.DB.Select(params...).Paginate(page, perPage).All(&users)
+	err = query.All(&users)
 	if err != nil {
 		return c.Render(http.StatusNotFound, r.JSON("Users not found"))
 	}
@@ -129,8 +135,17 @@ type responseUser struct {
 // @Failure 500 {string} string
 // @Router /users [post]
 func CreateUser(c buffalo.Context) error {
-	var userReq createUserRequest
-	err := c.Bind(&userReq)
+	var (
+		err            error
+		userReq        createUserRequest
+		passportSerie  int
+		passportNumber int
+	)
+	tx, ok := c.Value("tx").(*pop.Connection)
+	if !ok {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+	err = c.Bind(&userReq)
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
@@ -139,11 +154,11 @@ func CreateUser(c buffalo.Context) error {
 	if len(splitNumber) != 2 {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
-	_, err = strconv.Atoi(splitNumber[0])
+	passportSerie, err = strconv.Atoi(splitNumber[0])
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
 	}
-	_, err = strconv.Atoi(splitNumber[1])
+	passportNumber, err = strconv.Atoi(splitNumber[1])
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
@@ -156,7 +171,7 @@ func CreateUser(c buffalo.Context) error {
 
 	req := fmt.Sprintf(
 		"%s/info?passportSerie=%s&passportNumber=%s",
-		infoURL, string(splitNumber[0]), string(splitNumber[1]))
+		infoURL, fmt.Sprint(passportSerie), fmt.Sprint(passportNumber))
 
 	resp, err := http.Get(req)
 	if err != nil {
@@ -172,7 +187,17 @@ func CreateUser(c buffalo.Context) error {
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
-	err = models.DB.Create(&models.User{})
+	err = tx.Create(&models.User{
+		Surname:        user.Surname,
+		Name:           user.Name,
+		Patronymic:     user.Patronymic,
+		Address:        user.Address,
+		PassportSerie:  passportSerie,
+		PassportNumber: passportNumber,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	})
+
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
@@ -210,8 +235,13 @@ func UpdateUser(c buffalo.Context) error {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
+	tx, ok := c.Value("tx").(*pop.Connection)
+	if !ok {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+
 	user := &models.User{}
-	if err := models.DB.Find(user, c.Param("user_id")); err != nil {
+	if err := tx.Find(user, c.Param("user_id")); err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
@@ -246,7 +276,13 @@ func DeleteUser(c buffalo.Context) error {
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))
 	}
-	err = models.DB.Destroy(&models.User{ID: id})
+
+	tx, ok := c.Value("tx").(*pop.Connection)
+	if !ok {
+		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+
+	err = tx.Destroy(&models.User{ID: id})
 	if err != nil {
 		return c.Render(http.StatusNotFound, r.JSON("User not found"))
 	}

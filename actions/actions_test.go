@@ -17,11 +17,10 @@ func Test_ActionSuite(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	action := suite.NewAction(App())
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
+	action, err := suite.NewActionWithFixtures(App(), os.DirFS("../fixtures"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	as := &ActionSuite{
 		Action: action,
 	}

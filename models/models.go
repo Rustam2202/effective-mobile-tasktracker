@@ -13,10 +13,12 @@ var DB *pop.Connection
 
 func init() {
 	var err error
+	envy.Load("../.env")
 	env := envy.Get("GO_ENV", "development")
 	DB, err = pop.Connect(env)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	pop.Debug = env == "development"
 }
