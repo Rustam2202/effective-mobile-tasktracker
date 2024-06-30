@@ -12,8 +12,8 @@ import (
 	"github.com/gobuffalo/middleware/contenttype"
 	"github.com/gobuffalo/middleware/forcessl"
 	"github.com/gobuffalo/middleware/i18n"
+	"github.com/rs/zerolog/log"
 
-	// "github.com/gobuffalo/middleware/paramlogger"
 	_ "tasktracker/docs"
 
 	"github.com/gobuffalo/x/sessions"
@@ -69,7 +69,7 @@ func App() *buffalo.App {
 			SessionName: "_tasktracker_session",
 		})
 
-		envy.Load("/.env")
+		log.Info().Msg("Application started")
 
 		// Automatically redirect to SSL
 		// app.Use(forceSSL())

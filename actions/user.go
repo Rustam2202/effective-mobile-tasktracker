@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	log "tasktracker/logger"
 	"tasktracker/models"
 
 	"github.com/gobuffalo/buffalo"
@@ -35,9 +36,16 @@ import (
 // @Failure 404 {string} string
 // @Router /users [get]
 func GetAllUsers(c buffalo.Context) error {
-	users := []models.User{}
+	var (
+		err     error
+		users   = []models.User{}
+		page    int
+		perPage int
+	)
+
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
+		log.Logger.Error().Msg("Start transaction error")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 	query := tx.Q()
@@ -45,71 +53,89 @@ func GetAllUsers(c buffalo.Context) error {
 	if c.Param("id") != "" {
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))
-		}
-		if id < 0 {
+			log.Logger.Error().Msg("Invalid id")
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))
 		}
 		query = query.Where("id = ?", id)
+		log.Logger.Debug().Msg("ID added to query")
 	}
 	if c.Param("name") != "" {
 		query = query.Where("name = ?", c.Param("name"))
+		log.Logger.Debug().Msg("Name added to query")
 	}
 	if c.Param("surname") != "" {
 		query = query.Where("surname = ?", c.Param("surname"))
+		log.Logger.Debug().Msg("Surname added to query")
 	}
 	if c.Param("patronymic") != "" {
 		query = query.Where("patronymic = ?", c.Param("patronymic"))
+		log.Logger.Debug().Msg("Patronymic added to query")
 	}
 	if c.Param("passportSerie") != "" {
 		passSer, err := strconv.Atoi(c.Param("passportSerie"))
 		if err != nil {
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
 		}
-		if passSer < 0 || passSer > 4 {
+		if passSer < 1000 || passSer > 9999 {
+			log.Logger.Error().Msg("passportSerie must contain 4 digits")
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
 		}
 		query = query.Where("passport_serie = ?", passSer)
+		log.Logger.Debug().Msg("Passport serie added to query")
 	}
 	if c.Param("passportNumber") != "" {
 		passNumb, err := strconv.Atoi(c.Param("passportNumber"))
 		if err != nil {
+			log.Logger.Error().Msg("failed parsing passportNumber")
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 		}
-		if passNumb < 0 || passNumb > 6 {
+		if passNumb < 1000 || passNumb > 999999 {
+			log.Logger.Error().Msg("passportNumber must contain 6 digits")
 			return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 		}
 		query = query.Where("passport_number = ?", passNumb)
+		log.Logger.Debug().Msg("Passport number added to query")
 	}
 	if c.Param("address") != "" {
 		query = query.Where("address = ?", c.Param("address"))
+		log.Logger.Debug().Msg("Address added to query")
 	}
 
 	if c.Param("page") == "" {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
-	}
-	page, err := strconv.Atoi(c.Param("page"))
-	if err != nil {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid page number"))
-	}
-	if page < 0 {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid page number"))
+		page = 1
+		log.Logger.Debug().Msg("Page number is empty, set to 1")
+	} else {
+		page, err = strconv.Atoi(c.Param("page"))
+		if err != nil {
+			log.Logger.Error().Msg("failed to parse page number")
+			return c.Render(http.StatusBadRequest, r.JSON("Invalid page number"))
+		}
+		if page < 0 {
+			page = 1
+			log.Logger.Debug().Msg("Page number is less than 0, set to 1")
+		}
 	}
 	if c.Param("per_page") == "" {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
-	}
-	perPage, err := strconv.Atoi(c.Param("per_page"))
-	if err != nil {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
-	}
-	if perPage < 0 {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
+		perPage = 10
+		log.Logger.Debug().Msg("perPage is empty, set to 10")
+	} else {
+		perPage, err = strconv.Atoi(c.Param("per_page"))
+		if err != nil {
+			log.Logger.Error().Msg("failed to parse perPage number")
+			return c.Render(http.StatusBadRequest, r.JSON("Invalid perPage number"))
+		}
+		if perPage < 0 {
+			perPage = 10
+			log.Logger.Debug().Msg("perPage is less than 0, set to 10")
+		}
 	}
 
 	err = query.All(&users)
 	if err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to get users")
 		return c.Render(http.StatusNotFound, r.JSON("Users not found"))
 	}
+	log.Logger.Debug().Msg("Successfully get users")
 	return c.Render(http.StatusOK, r.JSON(users))
 }
 
@@ -143,29 +169,35 @@ func CreateUser(c buffalo.Context) error {
 	)
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
+		log.Logger.Error().Msg("Start transaction error")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 	err = c.Bind(&userReq)
 	if err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to bind request")
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
 	splitNumber := strings.Split(userReq.PassportNuber, " ")
 	if len(splitNumber) != 2 {
+		log.Logger.Error().Msg("passportNumber must contain 2 parts separated by space")
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
 	passportSerie, err = strconv.Atoi(splitNumber[0])
 	if err != nil {
+		log.Logger.Error().Msg("failed parsing passportSerie")
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport serie"))
 	}
 	passportNumber, err = strconv.Atoi(splitNumber[1])
 	if err != nil {
+		log.Logger.Error().Msg("failed parsing passportNumber")
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid passport number"))
 	}
 
 	envy.Load("../.env")
 	infoURL, err := envy.MustGet("INFO_URL")
 	if err != nil {
+		log.Logger.Error().Msg("Failed to get INFO_URL from .env")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
@@ -175,16 +207,19 @@ func CreateUser(c buffalo.Context) error {
 
 	resp, err := http.Get(req)
 	if err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to get user from external service")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
 	user := responseUser{}
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to read response body")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 	err = json.Unmarshal(bodyBytes, &user)
 	if err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to unmarshal response body")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 	err = tx.Create(&models.User{
@@ -199,6 +234,7 @@ func CreateUser(c buffalo.Context) error {
 	})
 
 	if err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to create user")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
@@ -229,30 +265,30 @@ type updateUserRequest struct {
 // @Failure 404 {string} string
 // @Router /users/{user_id} [put]
 func UpdateUser(c buffalo.Context) error {
-	// Получение ID пользователя из параметров запроса
-	id, err := strconv.Atoi(c.Param("user_id"))
-	if err != nil {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid user ID"))
-	}
-
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
+		log.Logger.Error().Msg("Start transaction error")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
-	// Поиск пользователя в базе данных
+	id, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		log.Logger.Error().Err(err).Msg("failed to parse user ID")
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid user ID"))
+	}
+
 	user := &models.User{}
 	if err := tx.Find(user, id); err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to find user in db")
 		return c.Render(http.StatusNotFound, r.JSON("User not found"))
 	}
 
-	// Обновление данных пользователя из запроса
 	var userReq updateUserRequest
 	if err := c.Bind(&userReq); err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to bind request with user struct")
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
-	// Обновление полей пользователя
 	user.Surname = userReq.Surname
 	user.Name = userReq.Name
 	user.Patronymic = userReq.Patronymic
@@ -261,8 +297,8 @@ func UpdateUser(c buffalo.Context) error {
 	user.PassportNumber = userReq.PassportNumber
 	user.UpdatedAt = time.Now()
 
-	// Сохранение изменений в базе данных
 	if err := tx.Update(user); err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to update user in db")
 		return c.Render(http.StatusInternalServerError, r.JSON("Failed to update user"))
 	}
 
@@ -280,18 +316,21 @@ func UpdateUser(c buffalo.Context) error {
 // @Failure 404 {string} string
 // @Router /users/{user_id} [delete]
 func DeleteUser(c buffalo.Context) error {
-	id, err := strconv.Atoi(c.Param("user_id"))
-	if err != nil {
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))
-	}
-
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
+		log.Logger.Error().Msg("Start transaction error")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+	}
+
+	id, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		log.Logger.Error().Err(err).Msg("failed to parse user ID")
+		return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))
 	}
 
 	err = tx.Destroy(&models.User{ID: id})
 	if err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to delete user from db")
 		return c.Render(http.StatusNotFound, r.JSON("User not found"))
 	}
 
