@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type TaskBind struct {
 	ID       int       `json:"id" db:"id"`

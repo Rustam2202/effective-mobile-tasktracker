@@ -1,10 +1,22 @@
 [[scenario]]
-name ="User test"
+name = "user_test"
 [[scenario.table]]
 name = "users"
 [[scenario.table.row]]
 id = 1
 name = "User 1"
+surname = "Surname User 1"
+address = "Address User 1"
+passport_serie = 1234
+passport_number = 567890
+created_at = 2024-06-27T06:55:06Z
+updated_at = 2024-06-27T06:55:06Z
 [[scenario.table.row]]
 id = 2
 name = "User 2"
+surname = "Surname User 2"
+address = "Address User 2"
+passport_serie = 9876
+passport_number = 654321
+created_at = 2024-06-27T06:55:06Z
+updated_at = 2024-06-27T06:55:06Z
