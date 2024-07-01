@@ -16,6 +16,18 @@ type userRequest struct {
 	TaskID int `json:"task_id"`
 }
 
+// StartUserTask
+//	@Summary		Start a task for a user
+//	@Description	Start a task for a user
+//	@Tags			Tasks
+//	@Accept			json
+//	@Produce		json
+//	@Param			userReq	body		userRequest	true	"User and Task IDs"
+//	@Success		200		{object}	models.TaskBind
+//	@Failure		400		{string}	string	"Invalid request"
+//	@Failure		404		{string}	string	"User or Task not found"
+//	@Failure		500		{string}	string	"Internal server error"
+//	@Router			/task/start [post]
 func StartUserTask(c buffalo.Context) error {
 	var (
 		err  error
@@ -58,7 +70,6 @@ func StartUserTask(c buffalo.Context) error {
 	}
 
 	err = tx.Create(&bind)
-	// err=models.DB.Create(&bind)
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to update task")
 		return c.Render(500, r.JSON("Internal server error"))
@@ -66,6 +77,18 @@ func StartUserTask(c buffalo.Context) error {
 	return c.Render(200, r.JSON(bind))
 }
 
+// StopUserTask
+//	@Summary		Stop a task for a user
+//	@Description	Stop a task for a user
+//	@Tags			Tasks
+//	@Accept			json
+//	@Produce		json
+//	@Param			userReq	body		userRequest	true	"User and Task IDs"
+//	@Success		200		{object}	models.TaskBind
+//	@Failure		400		{string}	string	"Invalid request"
+//	@Failure		404		{string}	string	"User or Task not found"
+//	@Failure		500		{string}	string	"Internal server error"
+//	@Router			/task/stop [post]
 func StopUserTask(c buffalo.Context) error {
 	var (
 		err  error
@@ -119,6 +142,19 @@ type TaskSums []struct {
 	TimeSum float64 `json:"time_sum" db:"time_sum"`
 }
 
+// GetTimeUsersTask
+//	@Summary		Get total time spent by a user on tasks within a period
+//	@Description	Get total time spent by a user on tasks within a period
+//	@Tags			Tasks
+//	@Accept			json
+//	@Produce		json
+//	@Param			user_id			path		int		true	"User ID"
+//	@Param			begin_period	query		string	true	"Begin period"
+//	@Param			end_period		query		string	true	"End period"
+//	@Success		200				{object}	TaskSums
+//	@Failure		400				{string}	string	"Invalid request"
+//	@Failure		500				{string}	string	"Internal server error"
+//	@Router			/task [get]
 func GetTimeUsersTask(c buffalo.Context) error {
 	var (
 		err         error

@@ -25,6 +25,30 @@ definitions:
       updated_at:
         type: string
     type: object
+  actions.userRequest:
+    properties:
+      task_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  models.TaskBind:
+    properties:
+      created_at:
+        type: string
+      finish_at:
+        type: string
+      id:
+        type: integer
+      start_at:
+        type: string
+      task_id:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
   models.User:
     properties:
       address:
@@ -49,7 +73,121 @@ definitions:
 info:
   contact: {}
 paths:
-  /users:
+  /task:
+    get:
+      consumes:
+      - application/json
+      description: Get total time spent by a user on tasks within a period
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: Begin period
+        in: query
+        name: begin_period
+        required: true
+        type: string
+      - description: End period
+        in: query
+        name: end_period
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              properties:
+                task_id:
+                  type: integer
+                time_sum:
+                  type: number
+              type: object
+            type: array
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get total time spent by a user on tasks within a period
+      tags:
+      - Tasks
+  /task/start:
+    post:
+      consumes:
+      - application/json
+      description: Start a task for a user
+      parameters:
+      - description: User and Task IDs
+        in: body
+        name: userReq
+        required: true
+        schema:
+          $ref: '#/definitions/actions.userRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.TaskBind'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "404":
+          description: User or Task not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Start a task for a user
+      tags:
+      - Tasks
+  /task/stop:
+    post:
+      consumes:
+      - application/json
+      description: Stop a task for a user
+      parameters:
+      - description: User and Task IDs
+        in: body
+        name: userReq
+        required: true
+        schema:
+          $ref: '#/definitions/actions.userRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.TaskBind'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "404":
+          description: User or Task not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Stop a task for a user
+      tags:
+      - Tasks
+  /user:
     get:
       consumes:
       - application/json
@@ -84,7 +222,7 @@ paths:
         in: query
         name: address
         type: string
-      - default: 0
+      - default: 1
         description: Page number
         in: query
         name: page
@@ -102,13 +240,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.User'
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
             type: string
         "404":
-          description: Not Found
+          description: Users not found
           schema:
             type: string
       summary: Get all users
@@ -129,47 +269,18 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: User created
           schema:
             type: string
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
             type: string
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             type: string
       summary: Create a new user
-      tags:
-      - Users
-  /users/{user_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete an existing user by ID
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Delete a user
       tags:
       - Users
     put:
@@ -196,14 +307,43 @@ paths:
           schema:
             $ref: '#/definitions/models.User'
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
             type: string
         "404":
-          description: Not Found
+          description: User not found
           schema:
             type: string
       summary: Update a user
+      tags:
+      - Users
+  /user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid id
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+      summary: Delete a user
       tags:
       - Users
 swagger: "2.0"

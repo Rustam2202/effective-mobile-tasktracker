@@ -47,17 +47,17 @@ var (
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
 
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server Petstore server.
-// @termsOfService http://swagger.io/terms/
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host petstore.swagger.io
-// @BasePath /v2
+//	@title			Swagger Example API
+//	@version		1.0
+//	@description	This is a sample server Petstore server.
+//	@termsOfService	http://swagger.io/terms/
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+//	@host			petstore.swagger.io
+//	@BasePath		/v2
 func App() *buffalo.App {
 	appOnce.Do(func() {
 		app = buffalo.New(buffalo.Options{
@@ -91,19 +91,18 @@ func App() *buffalo.App {
 		// app.Use(contenttype.Set("application/json"))
 		// app.Use(popmw.Transaction(models.DB))
 
-		// Routes
 		app.GET("/", HomeHandler)
 
 		// User routes
 		app.GET("/user", GetAllUsers)
-		app.POST("/user", CreateUser)             // Add a new user
-		app.PUT("/user", UpdateUser)    // Update user data
-		app.DELETE("/user/{id}", DeleteUser) // Delete a user
+		app.POST("/user", CreateUser)
+		app.PUT("/user", UpdateUser)
+		app.DELETE("/user/{id}", DeleteUser)
 
 		// Task time tracking routes
-		app.POST("/task/start", StartUserTask) // Start time tracking for a task
-		app.POST("/task/stop", StopUserTask)  // Stop time tracking for a task
-		app.GET("/task", GetTimeUsersTask)     // Get time tracking for a task
+		app.POST("/task/start", StartUserTask)
+		app.POST("/task/stop", StopUserTask)
+		app.GET("/task", GetTimeUsersTask)
 
 		// Swagger route
 		app.GET("/", HomeHandler)
