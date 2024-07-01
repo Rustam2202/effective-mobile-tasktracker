@@ -17,30 +17,3 @@ description = "Description Task 2"
 created_at = "<%= now() %>"
 updated_at = "<%= now() %>"
 
-# task_binds
-[[scenario.table]]
-name = "task_binds"
-[[scenario.table.row]]
-id = 1
-task_id = 1
-user_id = 1
-start_at = "<%= now() %>"
-finish_at = "<%= now() %>"
-created_at = "<%= now() %>"
-updated_at = "<%= now() %>"
-[[scenario.table.row]]
-id = 2
-task_id = 2
-user_id = 2
-start_at = "<%= now() %>"
-finish_at = "<%= now() %>"
-created_at = "<%= now() %>"
-updated_at = "<%= now() %>"
-[[scenario.table.row]]
-id = 3
-task_id = 1
-user_id = 2
-start_at = "<%= now() %>"
-finish_at = "<%= now() %>"
-created_at = "<%= now() %>"
-updated_at = "<%= now() %>"

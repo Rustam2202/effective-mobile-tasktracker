@@ -1,0 +1,37 @@
+[[scenario]]
+name = "task_binds_test"
+
+[[scenario.table]]
+name = "task_binds"
+[[scenario.table.row]]
+id = 1
+task_id = 1
+user_id = 1
+start_at = "<%= nowSub(6) %>"
+finish_at = "<%= nowSub(4) %>"
+created_at = "<%= nowSub(10) %>"
+updated_at = "<%= nowSub(10) %>"
+[[scenario.table.row]]
+id = 2
+task_id = 2
+user_id = 1
+start_at = "<%= nowSub(6) %>"
+finish_at = "<%= nowSub(1) %>"
+created_at = "<%= nowSub(10) %>"
+updated_at = "<%= nowSub(10) %>"
+[[scenario.table.row]]
+id = 3
+task_id = 3
+user_id = 1
+start_at = "<%= nowSub(4) %>"
+finish_at = "<%= nowSub(3) %>"
+created_at = "<%= nowSub(10) %>"
+updated_at = "<%= nowSub(10) %>"
+[[scenario.table.row]]
+id = 4
+task_id = 4
+user_id = 1
+start_at = "<%= nowSub(3) %>"
+finish_at = "<%= nowSub(1) %>"
+created_at = "<%= nowSub(10) %>"
+updated_at = "<%= nowSub(10) %>"

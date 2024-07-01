@@ -101,9 +101,9 @@ func App() *buffalo.App {
 		app.DELETE("/user/{user_id}", DeleteUser) // Delete a user
 
 		// Task time tracking routes
-		app.POST("/task/start", StartTaskOfUser) // Start time tracking for a task
-		app.POST("/task/stop", StartTaskOfUser)                    // Stop time tracking for a task
-		app.GET("/task", GetTimeUsersTask)                         // Get time tracking for a task
+		app.POST("/task/start", StartUserTask) // Start time tracking for a task
+		app.POST("/task/stop", StopUserTask)  // Stop time tracking for a task
+		app.GET("/task", GetTimeUsersTask)     // Get time tracking for a task
 
 		// Swagger route
 		app.GET("/", HomeHandler)
