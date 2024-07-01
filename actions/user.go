@@ -17,24 +17,6 @@ import (
 	"github.com/gobuffalo/pop/v6"
 )
 
-// @Summary Get all users
-// @Description Get a list of all users with optional filters for pagination and search
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id query integer false "User ID"
-// @Param name query string false "User name"
-// @Param surname query string false "User surname"
-// @Param patronymic query string false "User patronymic"
-// @Param passportSerie query integer false "User passport serie"
-// @Param passportNumber query integer false "User passport number"
-// @Param address query string false "User address"
-// @Param page query integer true "Page number" default(0)
-// @Param perPage query integer true "Number of users per page" default(10)
-// @Success 200 {object} models.User
-// @Failure 400 {string} string
-// @Failure 404 {string} string
-// @Router /users [get]
 func GetAllUsers(c buffalo.Context) error {
 	var (
 		err     error
@@ -130,7 +112,7 @@ func GetAllUsers(c buffalo.Context) error {
 		}
 	}
 
-	err = query.All(&users)
+	err = query.Paginate(page, perPage).All(&users)
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("Failed to get users")
 		return c.Render(http.StatusNotFound, r.JSON("Users not found"))
@@ -150,16 +132,6 @@ type responseUser struct {
 	Address    string `json:"address"`
 }
 
-// @Summary Create a new user
-// @Description Create a new user with the provided information
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param userReq body createUserRequest true "User request body"
-// @Success 200 {string} string
-// @Failure 400 {string} string
-// @Failure 500 {string} string
-// @Router /users [post]
 func CreateUser(c buffalo.Context) error {
 	var (
 		err            error
@@ -253,34 +225,11 @@ type updateUserRequest struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
-// @Summary Update a user
-// @Description Update an existing user with the provided information
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param user_id path integer true "User ID"
-// @Param userReq body updateUserRequest true "User request body"
-// @Success 200 {object} models.User
-// @Failure 400 {string} string
-// @Failure 404 {string} string
-// @Router /users/{user_id} [put]
 func UpdateUser(c buffalo.Context) error {
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		log.Logger.Error().Msg("Start transaction error")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
-	}
-
-	id, err := strconv.Atoi(c.Param("user_id"))
-	if err != nil {
-		log.Logger.Error().Err(err).Msg("failed to parse user ID")
-		return c.Render(http.StatusBadRequest, r.JSON("Invalid user ID"))
-	}
-
-	user := &models.User{}
-	if err := tx.Find(user, id); err != nil {
-		log.Logger.Error().Err(err).Msg("Failed to find user in db")
-		return c.Render(http.StatusNotFound, r.JSON("User not found"))
 	}
 
 	var userReq updateUserRequest
@@ -289,12 +238,30 @@ func UpdateUser(c buffalo.Context) error {
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid request"))
 	}
 
-	user.Surname = userReq.Surname
-	user.Name = userReq.Name
-	user.Patronymic = userReq.Patronymic
-	user.Address = userReq.Address
-	user.PassportSerie = userReq.PassportSerie
-	user.PassportNumber = userReq.PassportNumber
+	user := &models.User{}
+	if err := tx.Find(user, userReq.ID); err != nil {
+		log.Logger.Error().Err(err).Msg("Failed to find user in db")
+		return c.Render(http.StatusNotFound, r.JSON("User not found"))
+	}
+
+	if userReq.Name!="" {	
+		user.Name = userReq.Name
+	}
+	if userReq.Surname!="" {
+		user.Surname = userReq.Surname
+	}
+	if userReq.Patronymic!="" {
+		user.Patronymic = userReq.Patronymic
+	}
+	if userReq.Address!="" {
+		user.Address = userReq.Address
+	}
+	if userReq.PassportSerie!=0 {
+		user.PassportSerie = userReq.PassportSerie
+	}
+	if userReq.PassportNumber!=0 {
+		user.PassportNumber = userReq.PassportNumber
+	}
 	user.UpdatedAt = time.Now()
 
 	if err := tx.Update(user); err != nil {
@@ -305,16 +272,6 @@ func UpdateUser(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.JSON(user))
 }
 
-// @Summary Delete a user
-// @Description Delete an existing user by ID
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param user_id path integer true "User ID"
-// @Success 200 {string} string
-// @Failure 400 {string} string
-// @Failure 404 {string} string
-// @Router /users/{user_id} [delete]
 func DeleteUser(c buffalo.Context) error {
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
@@ -322,7 +279,7 @@ func DeleteUser(c buffalo.Context) error {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 
-	id, err := strconv.Atoi(c.Param("user_id"))
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to parse user ID")
 		return c.Render(http.StatusBadRequest, r.JSON("Invalid id"))

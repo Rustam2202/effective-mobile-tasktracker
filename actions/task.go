@@ -114,6 +114,11 @@ func StopUserTask(c buffalo.Context) error {
 	return c.Render(200, r.JSON(map[string]string{}))
 }
 
+type TaskSums []struct {
+	TaskID  int     `json:"task_id" db:"task_id"`
+	TimeSum float64 `json:"time_sum" db:"time_sum"`
+}
+
 func GetTimeUsersTask(c buffalo.Context) error {
 	var (
 		err         error
@@ -168,14 +173,10 @@ func GetTimeUsersTask(c buffalo.Context) error {
         GROUP BY 
             task_id
         ORDER BY 
-            time_sum;
+            time_sum DESC;
 	`
 
-	type TaskSum struct {
-		TaskID  int     `json:"task_id" db:"task_id"`
-		TimeSum float64 `json:"time_sum" db:"time_sum"`
-	}
-	var taskSums []TaskSum
+	var taskSums TaskSums
 	err = tx.RawQuery(query, beginPeriod, endPeriod, endPeriod, userId, endPeriod, beginPeriod).All(&taskSums)
 
 	if err != nil {

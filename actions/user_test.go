@@ -6,7 +6,7 @@ import (
 	"tasktracker/models"
 )
 
-func (as *ActionSuite) Test_UserCRUDFromInfo() {
+func (as *ActionSuite) Test_UserCRUD() {
 	var (
 		err   error
 		user  models.User
@@ -42,26 +42,20 @@ func (as *ActionSuite) Test_UserCRUDFromInfo() {
 	as.NotZero(users[0].UpdatedAt)
 
 	// update user
-	updatedUser := updateUserRequest{
-		Surname:        "Петров",
-		Name:           "Петр",
+	updatedUser := models.User{
+		ID:             users[0].ID,
 		Patronymic:     "Петрович",
-		PassportSerie:  4321,
+		Name:           "Петр",
 		PassportNumber: 987654,
-		Address:        "г. Санкт-Петербург, ул. Невская, д. 10, кв. 2",
 	}
 
-	resUpdate := as.JSON("/user/" + strconv.Itoa(users[0].ID)).Put(updatedUser)
+	resUpdate := as.JSON("/user").Put(&updatedUser)
 	as.Equal(200, resUpdate.Code)
 	err = json.Unmarshal(resUpdate.Body.Bytes(), &user)
 	as.NoError(err)
 	as.Equal("Петр", user.Name)
-	as.Equal("Петров", user.Surname)
 	as.Equal("Петрович", user.Patronymic)
-	as.Equal("г. Санкт-Петербург, ул. Невская, д. 10, кв. 2", user.Address)
-	as.Equal(4321, user.PassportSerie)
 	as.Equal(987654, user.PassportNumber)
-	as.NotZero(user.CreatedAt)
 	as.NotZero(user.UpdatedAt)
 
 	// delete user

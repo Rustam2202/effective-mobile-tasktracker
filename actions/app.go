@@ -95,10 +95,10 @@ func App() *buffalo.App {
 		app.GET("/", HomeHandler)
 
 		// User routes
-		app.GET("/user/", GetAllUsers)
+		app.GET("/user", GetAllUsers)
 		app.POST("/user", CreateUser)             // Add a new user
-		app.PUT("/user/{user_id}", UpdateUser)    // Update user data
-		app.DELETE("/user/{user_id}", DeleteUser) // Delete a user
+		app.PUT("/user", UpdateUser)    // Update user data
+		app.DELETE("/user/{id}", DeleteUser) // Delete a user
 
 		// Task time tracking routes
 		app.POST("/task/start", StartUserTask) // Start time tracking for a task
