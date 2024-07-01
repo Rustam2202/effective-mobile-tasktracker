@@ -15,8 +15,8 @@ migrate-test:
 
 swag:
 	swag fmt
-	swag init -g cmd/app/main.go
-	
+	swag init -o docs -g cmd/app/main.go
+	npx @redocly/cli build-docs ./docs/swagger.json -o ./docs/index.html
+
 dev:
-	make db
 	buffalo dev
