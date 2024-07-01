@@ -7,7 +7,7 @@ name = "task_binds"
 id = 1
 task_id = 1
 user_id = 1
-start_at = "<%= nowSub(6) %>"
+start_at = "<%= nowSub(6) %>" # minis 6 seconds from now
 finish_at = "<%= nowSub(4) %>"
 created_at = "<%= nowSub(10) %>"
 updated_at = "<%= nowSub(10) %>"
@@ -24,7 +24,7 @@ id = 3
 task_id = 3
 user_id = 1
 start_at = "<%= nowSub(4) %>"
-finish_at = "<%= nowSub(3) %>"
+finish_at = "<%= nowSub(2) %>"
 created_at = "<%= nowSub(10) %>"
 updated_at = "<%= nowSub(10) %>"
 [[scenario.table.row]]

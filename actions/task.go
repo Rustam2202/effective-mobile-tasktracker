@@ -114,12 +114,6 @@ func StopUserTask(c buffalo.Context) error {
 	return c.Render(200, r.JSON(map[string]string{}))
 }
 
-// type timeUsersTask struct {
-// 	UserID      int       `json:"user_id"`
-// 	BeginPeriod time.Time `json:"begin_period"`
-// 	EndPeriod   time.Time `json:"end_period"`
-// }
-
 func GetTimeUsersTask(c buffalo.Context) error {
 	var (
 		err         error
@@ -153,36 +147,41 @@ func GetTimeUsersTask(c buffalo.Context) error {
 	}
 
 	query := `
-    WITH adjusted_times AS (
+	 WITH adjusted_times AS (
+            SELECT 
+                GREATEST(start_at, ?) AS begin_time,
+                LEAST(CASE WHEN finish_at IS NULL THEN ? ELSE finish_at END, ?) AS end_time,
+                task_id
+            FROM 
+                task_binds
+            WHERE 
+                user_id = ? AND
+                (start_at <= ? AND (finish_at >= ? OR finish_at IS NULL))
+        )
         SELECT 
-            GREATEST(start_at, ?) AS begin_time,
-            LEAST(CASE WHEN finish_at IS NULL THEN NOW() ELSE finish_at END, ?) AS end_time
+            task_id,
+            SUM(EXTRACT(EPOCH FROM (end_time - begin_time))) AS time_sum
         FROM 
-            task_binds
+            adjusted_times
         WHERE 
-            user_id = ? AND
-            (start_at <= ? AND (finish_at >= ? OR finish_at IS NULL))
-    )
-    SELECT 
-        SUM(EXTRACT(EPOCH FROM (end_time - begin_time))) AS total_seconds
-    FROM 
-        adjusted_times
-    WHERE 
-        begin_time < end_time;
-    `
-	var totalSeconds float64
-	err = tx.RawQuery(query, beginPeriod, endPeriod, userId, endPeriod, beginPeriod).First(&totalSeconds)
+            begin_time < end_time
+        GROUP BY 
+            task_id
+        ORDER BY 
+            time_sum;
+	`
+
+	type TaskSum struct {
+		TaskID  int     `json:"task_id" db:"task_id"`
+		TimeSum float64 `json:"time_sum" db:"time_sum"`
+	}
+	var taskSums []TaskSum
+	err = tx.RawQuery(query, beginPeriod, endPeriod, endPeriod, userId, endPeriod, beginPeriod).All(&taskSums)
 
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to calculate total time")
 		return c.Render(500, r.JSON("Internal server error"))
 	}
 
-	hours := int(totalSeconds / 3600)
-	minutes := int(totalSeconds/60) % 60
-
-	return c.Render(200, r.JSON(map[string]interface{}{
-		"hours":   hours,
-		"minutes": minutes,
-	}))
+	return c.Render(200, r.JSON(taskSums))
 }
