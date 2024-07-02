@@ -44,17 +44,11 @@ var (
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
 
-// @title			Swagger Example API
+// @title			Task Tracker API
 // @version		1.0
-// @description	This is a sample server Petstore server.
-// @termsOfService	http://swagger.io/terms/
-// @contact.name	API Support
-// @contact.url	http://www.swagger.io/support
-// @contact.email	support@swagger.io
-// @license.name	Apache 2.0
-// @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
-// @host			petstore.swagger.io
-// @BasePath		/v2
+// @description	API for tracking time spent on tasks
+// @host			https://rustam2202.github.io/effective-mobile-tasktracker/
+// @BasePath		/swagger/index.html
 func App() *buffalo.App {
 	appOnce.Do(func() {
 		app = buffalo.New(buffalo.Options{

@@ -16,8 +16,6 @@ type userRequest struct {
 	TaskID int `json:"task_id"`
 }
 
-// StartUserTask
-//
 //	@Summary		Start a task for a user
 //	@Description	Start a task for a user
 //	@Tags			Tasks
@@ -81,8 +79,6 @@ func StartUserTask(c buffalo.Context) error {
 	return c.Render(200, r.JSON(taskBind))
 }
 
-// StopUserTask
-//
 //	@Summary		Stop a task for a user
 //	@Description	Stop a task for a user
 //	@Tags			Tasks
@@ -150,16 +146,14 @@ type TaskSums []struct {
 	TimeSum float64 `json:"time_sum" db:"time_sum"`
 }
 
-// GetTimeUsersTask
-//
 //	@Summary		Get total time spent by a user on tasks within a period
 //	@Description	Get total time spent by a user on tasks within a period
 //	@Tags			Tasks
 //	@Accept			json
 //	@Produce		json
 //	@Param			user_id			path		int		true	"User ID"
-//	@Param			begin_period	query		string	true	"Begin period"
-//	@Param			end_period		query		string	true	"End period"
+//	@Param			begin_period	query		string	true	"Begin period" example("2023-30-12 00:00:00")
+//	@Param			end_period		query		string	true	"End period" example("2023-31-12 23:59:59")
 //	@Success		200				{object}	TaskSums
 //	@Failure		400				{string}	string	"Invalid request"
 //	@Failure		500				{string}	string	"Internal server error"
@@ -183,13 +177,13 @@ func GetTimeUsersTask(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("failed to convert user_id")
 		return c.Render(400, r.String("Invalid request"))
 	}
-	beginPeriod, err = time.Parse(http.TimeFormat, c.Param("begin_period"))
+	beginPeriod, err = time.Parse(time.DateTime, c.Param("begin_period"))
 	log.Logger.Debug().Msgf("begin_period: %s", c.Param("begin_period"))
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to convert begin_period")
 		return c.Render(400, r.String("Invalid request"))
 	}
-	endPeriod, err = time.Parse(http.TimeFormat, c.Param("end_period"))
+	endPeriod, err = time.Parse(time.DateTime, c.Param("end_period"))
 	log.Logger.Debug().Msgf("end_period: %s", c.Param("end_period"))
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to convert end_period")

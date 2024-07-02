@@ -1,7 +1,6 @@
  include .env
 
 db:
-# docker rm -f postgres-tasktracker || true
 	docker run --name $(CONTAINER_NAME) -e POSTGRES_USER=$(POSTGRES_USER) -e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) -p $(POSTGRES_PORT):5432 -d postgres
 	@$(SLEEP) 2
 	make migrate-dev

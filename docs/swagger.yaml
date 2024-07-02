@@ -85,11 +85,13 @@ paths:
         required: true
         type: integer
       - description: Begin period
+        example: '"2023-30-12 00:00:00"'
         in: query
         name: begin_period
         required: true
         type: string
       - description: End period
+        example: '"2023-31-12 23:59:59"'
         in: query
         name: end_period
         required: true
@@ -312,6 +314,10 @@ paths:
             type: string
         "404":
           description: User not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
           schema:
             type: string
       summary: Update a user

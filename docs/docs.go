@@ -38,6 +38,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "example": "\"2023-30-12 00:00:00\"",
                         "description": "Begin period",
                         "name": "begin_period",
                         "in": "query",
@@ -45,6 +46,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "example": "\"2023-31-12 23:59:59\"",
                         "description": "End period",
                         "name": "end_period",
                         "in": "query",
@@ -330,6 +332,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "User not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "type": "string"
                         }

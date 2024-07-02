@@ -3,7 +3,6 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"tasktracker/models"
 	"time"
 )
@@ -62,8 +61,8 @@ func (as *ActionSuite) Test_GetTimeUsersTask() {
 	as.LoadFixture("task_test")
 	as.LoadFixture("task_binds_test")
 
-	beginPeriod := time.Now().Add(-5 * time.Second).Format(http.TimeFormat)
-	endPeriod := time.Now().Add(-2 * time.Second).Format(http.TimeFormat)
+	beginPeriod := time.Now().Add(-5 * time.Second).Format(time.DateTime)
+	endPeriod := time.Now().Add(-2 * time.Second).Format(time.DateTime)
 	query := fmt.Sprintf(`/task?user_id=1&begin_period=%s&end_period=%s`, beginPeriod, endPeriod)
 	res := as.HTML(query).Get()
 
