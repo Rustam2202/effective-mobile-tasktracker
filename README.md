@@ -1,58 +1,43 @@
 # Task Tracker
 
 REST API application for users task tracking.
-[Powered by Buffalo](http://gobuffalo.io)
-## Installation
 
-To install and run the Task Tracker application, follow these steps:
+## Using
 
-1. Clone the repository:
+This App uses the [Go Buffalo framework](http://gobuffalo.io). Make sure that Buffalo is [installed](https://gobuffalo.io/documentation/getting_started/installation/).
 
-    ```shell
-    git clone https://github.com/rustamnurmiev/tasktracker.git
-    ```
+Set up the environment variables by creating a `.env` file and adding the following content:
 
-2. Navigate to the project directory:
+```
+GO_ENV=development
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_PORT=5432
+CONTAINER_NAME=postgres-tasktracker
+INFO_URL=https://2eeba4a1-f18e-4fe5-9309-5b01aab3e99d.mock.pstmn.io
+```
 
-    ```shell
-    cd tasktracker
-    ```
+Note: If you are running the application in a different environment, make sure to update the `GO_ENV` variable accordingly.
 
-3. Set up the environment variables by creating a `.env` file and adding the following content:
+Start the PostgreSQL database container and run the database migration:
 
-    ```shell
-    GO_ENV=development
-    POSTGRES_USER=postgres
-    POSTGRES_PASSWORD=postgres
-    POSTGRES_PORT=5432
-    CONTAINER_NAME=postgres-tasktracker
-    INFO_URL=https://2eeba4a1-f18e-4fe5-9309-5b01aab3e99d.mock.pstmn.io
-    ```
+```
+make db
+```
 
-    Note: If you are running the application in a different environment, make sure to update the `GO_ENV` variable accordingly.
+Start the application:
 
-4. Start the PostgreSQL database container and run the database migration:
+```
+make dev
+```
 
-    ```shell
-    make db
-    ```
-
-5. Start the application:
-
-    ```shell
-    make dev
-    ```
-
-    The application will be accessible at [http://127.0.0.1:3000](http://127.0.0.1:3000) by default.
+The application will be accessible at [http://127.0.0.1:3000](http://127.0.0.1:3000) by default.
 
 ## Documentation
 
 For detailed documentation on the Task Tracker API, please visit [https://rustam2202.github.io/effective-mobile-tasktracker/](https://rustam2202.github.io/effective-mobile-tasktracker/).
 
-
 <!-- ## What Next? -->
-
-
 <!-- {"people":
     {
         "name": "Иван",

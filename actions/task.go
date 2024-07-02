@@ -16,17 +16,17 @@ type userRequest struct {
 	TaskID int `json:"task_id"`
 }
 
-//	@Summary		Start a task for a user
-//	@Description	Start a task for a user
-//	@Tags			Tasks
-//	@Accept			json
-//	@Produce		json
-//	@Param			userReq	body		userRequest	true	"User and Task IDs"
-//	@Success		200		{object}	models.TaskBind
-//	@Failure		400		{string}	string	"Invalid request"
-//	@Failure		404		{string}	string	"User or Task not found"
-//	@Failure		500		{string}	string	"Internal server error"
-//	@Router			/task/start [post]
+// @Summary		Start a task for a user
+// @Description	Start a task for a user
+// @Tags			Tasks
+// @Accept			json
+// @Produce		json
+// @Param			userReq	body		userRequest	true	"User and Task IDs"
+// @Success		200		{object}	models.TaskBind
+// @Failure		400		{string}	string	"Invalid request"
+// @Failure		404		{string}	string	"User or Task not found"
+// @Failure		500		{string}	string	"Internal server error"
+// @Router			/task/start [post]
 func StartUserTask(c buffalo.Context) error {
 	var (
 		err      error
@@ -47,6 +47,7 @@ func StartUserTask(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("Failed to bind request")
 		return c.Render(400, r.String("Invalid request"))
 	}
+	log.Logger.Debug().Msgf("Reqest was binded: %v", req)
 
 	err = tx.Find(&user, req.UserID)
 	if err != nil {
@@ -74,22 +75,23 @@ func StartUserTask(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("failed to update task")
 		return c.Render(500, r.JSON("Internal server error"))
 	}
-	log.Logger.Debug().Msg("Task Bind was created (User started a Task)")
-
+	log.Logger.Info().Msg("Task Bind was created (User started a Task)")
+	log.Logger.Debug().Msgf("Task started successfully for user: %d with task ID: %d", req.UserID, req.TaskID)
+    
 	return c.Render(200, r.JSON(taskBind))
 }
 
-//	@Summary		Stop a task for a user
-//	@Description	Stop a task for a user
-//	@Tags			Tasks
-//	@Accept			json
-//	@Produce		json
-//	@Param			userReq	body		userRequest	true	"User and Task IDs"
-//	@Success		200		{object}	models.TaskBind
-//	@Failure		400		{string}	string	"Invalid request"
-//	@Failure		404		{string}	string	"User or Task not found"
-//	@Failure		500		{string}	string	"Internal server error"
-//	@Router			/task/stop [post]
+// @Summary		Stop a task for a user
+// @Description	Stop a task for a user
+// @Tags			Tasks
+// @Accept			json
+// @Produce		json
+// @Param			userReq	body		userRequest	true	"User and Task IDs"
+// @Success		200		{object}	models.TaskBind
+// @Failure		400		{string}	string	"Invalid request"
+// @Failure		404		{string}	string	"User or Task not found"
+// @Failure		500		{string}	string	"Internal server error"
+// @Router			/task/stop [post]
 func StopUserTask(c buffalo.Context) error {
 	var (
 		err  error
@@ -110,6 +112,7 @@ func StopUserTask(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("Failed to bind request")
 		return c.Render(400, r.String("Invalid request"))
 	}
+	log.Logger.Debug().Msgf("Reqest was binded: %v", req)
 
 	err = tx.Find(&user, req.UserID)
 	if err != nil {
@@ -136,7 +139,8 @@ func StopUserTask(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("failed to update task")
 		return c.Render(500, r.String("Internal server error"))
 	}
-	log.Logger.Debug().Msg("Task Bind was updated (User stopped a Task)")
+	log.Logger.Info().Msg("Task Bind was updated (User stopped a Task)")
+	log.Logger.Debug().Msgf("Task stopped successfully for user: %d with task ID: %d", req.UserID, req.TaskID)
 
 	return c.Render(200, r.JSON(map[string]string{}))
 }
@@ -146,18 +150,18 @@ type TaskSums []struct {
 	TimeSum float64 `json:"time_sum" db:"time_sum"`
 }
 
-//	@Summary		Get total time spent by a user on tasks within a period
-//	@Description	Get total time spent by a user on tasks within a period
-//	@Tags			Tasks
-//	@Accept			json
-//	@Produce		json
-//	@Param			user_id			path		int		true	"User ID"
-//	@Param			begin_period	query		string	true	"Begin period" example("2023-30-12 00:00:00")
-//	@Param			end_period		query		string	true	"End period" example("2023-31-12 23:59:59")
-//	@Success		200				{object}	TaskSums
-//	@Failure		400				{string}	string	"Invalid request"
-//	@Failure		500				{string}	string	"Internal server error"
-//	@Router			/task [get]
+// @Summary		Get total time spent by a user on tasks within a period
+// @Description	Get total time spent by a user on tasks within a period
+// @Tags			Tasks
+// @Accept			json
+// @Produce		json
+// @Param			user_id			path		int		true	"User ID"
+// @Param			begin_period	query		string	true	"Begin period" example("2023-30-12 00:00:00")
+// @Param			end_period		query		string	true	"End period" example("2023-31-12 23:59:59")
+// @Success		200				{object}	TaskSums
+// @Failure		400				{string}	string	"Invalid request"
+// @Failure		500				{string}	string	"Internal server error"
+// @Router			/task [get]
 func GetTimeUsersTask(c buffalo.Context) error {
 	var (
 		err         error
@@ -189,6 +193,8 @@ func GetTimeUsersTask(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("failed to convert end_period")
 		return c.Render(400, r.String("Invalid request"))
 	}
+	log.Logger.Info().Int("user_id", userId).Str("begin_period", beginPeriod.String()).
+		Str("end_period", endPeriod.String()).Msg("Fetching time spent on tasks")
 
 	query := `
 	 WITH adjusted_times AS (
@@ -221,7 +227,8 @@ func GetTimeUsersTask(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("failed to calculate total time")
 		return c.Render(500, r.String("Internal server error"))
 	}
-	log.Logger.Debug().Msg("Total time was calculated")
+	log.Logger.Info().Msg("Total time was calculated")
+	log.Logger.Debug().Msgf("Total time spent on tasks by user %d: %v", userId, taskSums)
 
 	return c.Render(200, r.JSON(taskSums))
 }

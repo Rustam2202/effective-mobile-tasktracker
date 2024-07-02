@@ -116,7 +116,8 @@ func CreateUser(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("Failed to create user")
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
-	log.Logger.Debug().Msg("User created")
+	log.Logger.Info().Msg("User created")
+	log.Logger.Debug().Msgf("User created: %v", user)
 
 	return c.Render(http.StatusOK, r.String("User created"))
 }
@@ -240,7 +241,9 @@ func GetAllUsers(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("Failed to get users")
 		return c.Render(http.StatusNotFound, r.JSON("Users not found"))
 	}
-	log.Logger.Debug().Msg("Successfully get users")
+	log.Logger.Info().Msg("Successfully get users")
+	log.Logger.Debug().Msgf("Users got: %v", users)
+
 	return c.Render(http.StatusOK, r.JSON(users))
 }
 
@@ -317,7 +320,8 @@ func UpdateUser(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("Failed to update user in db")
 		return c.Render(http.StatusInternalServerError, r.String("Failed to update user"))
 	}
-	log.Logger.Debug().Msg("User updated")
+	log.Logger.Info().Msg("User updated")
+	log.Logger.Debug().Msgf("User updated: %v", user)
 
 	return c.Render(http.StatusOK, r.JSON(user))
 }
@@ -350,7 +354,8 @@ func DeleteUser(c buffalo.Context) error {
 		log.Logger.Error().Err(err).Msg("Failed to delete user from db")
 		return c.Render(http.StatusNotFound, r.String("User not found"))
 	}
-	log.Logger.Debug().Msg("User deleted")
+	log.Logger.Info().Msg("User deleted")
+	log.Logger.Debug().Msgf("User deleted: %v", id)
 
 	return c.Render(http.StatusOK, r.String("User deleted"))
 }
