@@ -1,39 +1,47 @@
-# Welcome to Buffalo
+# Task Tracker
 
-Thank you for choosing Buffalo for your web development needs.
+REST API application for users task tracking.
+[Powered by Buffalo](http://gobuffalo.io)
 
-## Database Setup
+## Docs
 
-It looks like you chose to set up your application using a database! Fantastic!
 
-The first thing you need to do is open up the "database.yml" file and edit it to use the correct usernames, passwords, hosts, etc... that are appropriate for your environment.
 
-You will also need to make sure that **you** start/install the database of your choice. Buffalo **won't** install and start it for you.
+### Enviroments
 
-### Create Your Databases
-
-Ok, so you've edited the "database.yml" file and started your database, now Buffalo can create the databases in that file for you:
-
-```console
-buffalo pop create -a
+Set your enviroments in ```.env``` file. For example:
 ```
+GO_ENV=development
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_PORT=5432
+CONTAINER_NAME=postgres-tasktracker
+INFO_URL=https://2eeba4a1-f18e-4fe5-9309-5b01aab3e99d.mock.pstmn.io
+```
+
+Change on ```GO_ENV=test``` for debuging tests.
+```INFO_URL/info``` used for get and fill User info by request with passportNumber.
 
 ## Starting the Application
 
-Buffalo ships with a command that will watch your application and automatically rebuild the Go binary and any assets for you. To do that run the "buffalo dev" command:
+Run ``` make db``` for create PostgeSQL docker container and development database migrate.
+Run ``` make dev``` for start application.
+Run ``` make migrate-test``` for testing database migrate and using for debugging tests.
 
-```console
-buffalo dev
-```
+By default used url [http://127.0.0.1:3000](http://127.0.0.1:3000).
 
-If you point your browser to [http://127.0.0.1:3000](http://127.0.0.1:3000) you should see a "Welcome to Buffalo!" page.
 
-**Congratulations!** You now have your Buffalo application up and running.
 
 ## What Next?
 
-We recommend you heading over to [http://gobuffalo.io](http://gobuffalo.io) and reviewing all of the great documentation there.
 
-Good luck!
 
-[Powered by Buffalo](http://gobuffalo.io)
+
+<!-- {"people":
+    {
+        "name": "Иван",
+        "surname": "Иванов",
+        "patronymic": "Иванович",
+        "address": "г. Москва, ул. Ленина, д. 5, кв. 1"
+    }
+} -->

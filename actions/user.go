@@ -18,6 +18,7 @@ import (
 )
 
 // GetAllUsers
+//
 //	@Summary		Get all users
 //	@Description	Get a list of all users with optional filters for pagination and search
 //	@Tags			Users
@@ -145,13 +146,16 @@ type createUserRequest struct {
 }
 
 type responseUser struct {
-	Name       string `json:"name"`
-	Surname    string `json:"surname"`
-	Patronymic string `json:"patronymic"`
-	Address    string `json:"address"`
+	People struct {
+		Name       string `json:"name"`
+		Surname    string `json:"surname"`
+		Patronymic string `json:"patronymic"`
+		Address    string `json:"address"`
+	} `json:"people"`
 }
 
 // CreateUser
+//
 //	@Summary		Create a new user
 //	@Description	Create a new user with the provided information
 //	@Tags			Users
@@ -225,10 +229,10 @@ func CreateUser(c buffalo.Context) error {
 		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
 	}
 	err = tx.Create(&models.User{
-		Surname:        user.Surname,
-		Name:           user.Name,
-		Patronymic:     user.Patronymic,
-		Address:        user.Address,
+		Surname:        user.People.Surname,
+		Name:           user.People.Name,
+		Patronymic:     user.People.Patronymic,
+		Address:        user.People.Address,
 		PassportSerie:  passportSerie,
 		PassportNumber: passportNumber,
 		CreatedAt:      time.Now(),
@@ -256,6 +260,7 @@ type updateUserRequest struct {
 }
 
 // UpdateUser
+//
 //	@Summary		Update a user
 //	@Description	Update an existing user with the provided information
 //	@Tags			Users
@@ -286,22 +291,22 @@ func UpdateUser(c buffalo.Context) error {
 		return c.Render(http.StatusNotFound, r.JSON("User not found"))
 	}
 
-	if userReq.Name!="" {	
+	if userReq.Name != "" {
 		user.Name = userReq.Name
 	}
-	if userReq.Surname!="" {
+	if userReq.Surname != "" {
 		user.Surname = userReq.Surname
 	}
-	if userReq.Patronymic!="" {
+	if userReq.Patronymic != "" {
 		user.Patronymic = userReq.Patronymic
 	}
-	if userReq.Address!="" {
+	if userReq.Address != "" {
 		user.Address = userReq.Address
 	}
-	if userReq.PassportSerie!=0 {
+	if userReq.PassportSerie != 0 {
 		user.PassportSerie = userReq.PassportSerie
 	}
-	if userReq.PassportNumber!=0 {
+	if userReq.PassportNumber != 0 {
 		user.PassportNumber = userReq.PassportNumber
 	}
 	user.UpdatedAt = time.Now()
@@ -315,6 +320,7 @@ func UpdateUser(c buffalo.Context) error {
 }
 
 // DeleteUser
+//
 //	@Summary		Delete a user
 //	@Description	Delete an existing user by ID
 //	@Tags			Users
