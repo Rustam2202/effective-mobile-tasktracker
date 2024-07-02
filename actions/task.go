@@ -17,6 +17,7 @@ type userRequest struct {
 }
 
 // StartUserTask
+//
 //	@Summary		Start a task for a user
 //	@Description	Start a task for a user
 //	@Tags			Tasks
@@ -30,36 +31,37 @@ type userRequest struct {
 //	@Router			/task/start [post]
 func StartUserTask(c buffalo.Context) error {
 	var (
-		err  error
-		user models.User
-		task models.Task
-		bind models.TaskBind
+		err      error
+		user     models.User
+		task     models.Task
+		taskBind models.TaskBind
 	)
+
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
-		log.Logger.Error().Msg("Start transaction error")
-		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+		log.Logger.Error().Msg("Failed to start transaction")
+		return c.Render(http.StatusInternalServerError, r.String("Internal server error"))
 	}
 
 	var req userRequest
 	err = c.Bind(&req)
 	if err != nil {
-		log.Logger.Error().Err(err).Msg("failed to bind request")
-		return c.Render(400, r.JSON("Invalid request"))
+		log.Logger.Error().Err(err).Msg("Failed to bind request")
+		return c.Render(400, r.String("Invalid request"))
 	}
 
 	err = tx.Find(&user, req.UserID)
 	if err != nil {
-		log.Logger.Error().Err(err).Msg("failed to find user")
-		return c.Render(404, r.JSON("User not found"))
+		log.Logger.Error().Err(err).Msg("Failed to find user")
+		return c.Render(404, r.String("User not found"))
 	}
 	err = tx.Find(&task, req.TaskID)
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to find task")
-		return c.Render(404, r.JSON("Task not found"))
+		return c.Render(404, r.String("Task not found"))
 	}
 
-	bind = models.TaskBind{
+	taskBind = models.TaskBind{
 		ID:        0,
 		TaskID:    req.TaskID,
 		UserID:    req.UserID,
@@ -69,15 +71,18 @@ func StartUserTask(c buffalo.Context) error {
 		UpdatedAt: time.Now(),
 	}
 
-	err = tx.Create(&bind)
+	err = tx.Create(&taskBind)
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to update task")
 		return c.Render(500, r.JSON("Internal server error"))
 	}
-	return c.Render(200, r.JSON(bind))
+	log.Logger.Debug().Msg("Task Bind was created (User started a Task)")
+
+	return c.Render(200, r.JSON(taskBind))
 }
 
 // StopUserTask
+//
 //	@Summary		Stop a task for a user
 //	@Description	Stop a task for a user
 //	@Tags			Tasks
@@ -99,41 +104,44 @@ func StopUserTask(c buffalo.Context) error {
 
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
-		log.Logger.Error().Msg("Start transaction error")
-		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+		log.Logger.Error().Msg("Failed to start transaction")
+		return c.Render(http.StatusInternalServerError, r.String("Internal server error"))
 	}
 
 	var req userRequest
 	err = c.Bind(&req)
 	if err != nil {
-		log.Logger.Error().Err(err).Msg("failed to bind request")
-		return c.Render(400, r.JSON("Invalid request"))
+		log.Logger.Error().Err(err).Msg("Failed to bind request")
+		return c.Render(400, r.String("Invalid request"))
 	}
 
 	err = tx.Find(&user, req.UserID)
 	if err != nil {
-		log.Logger.Error().Err(err).Msg("failed to find user")
-		return c.Render(404, r.JSON("User not found"))
+		log.Logger.Error().Err(err).Msg("Failed to find user")
+		return c.Render(404, r.String("User not found"))
 	}
 	err = tx.Find(&task, req.TaskID)
 	if err != nil {
-		log.Logger.Error().Err(err).Msg("failed to find task")
-		return c.Render(404, r.JSON("Task not found"))
+		log.Logger.Error().Err(err).Msg("Failed to find task")
+		return c.Render(404, r.String("Task not found"))
 	}
+
 	bind.UserID = user.ID
 	bind.TaskID = task.ID
 	err = tx.First(&bind)
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to find task bind")
-		return c.Render(404, r.JSON("Task bind not found"))
+		return c.Render(404, r.String("Task bind not found"))
 	}
 	bind.FinishAt = time.Now()
 
 	err = tx.Update(&bind)
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to update task")
-		return c.Render(500, r.JSON("Internal server error"))
+		return c.Render(500, r.String("Internal server error"))
 	}
+	log.Logger.Debug().Msg("Task Bind was updated (User stopped a Task)")
+
 	return c.Render(200, r.JSON(map[string]string{}))
 }
 
@@ -143,6 +151,7 @@ type TaskSums []struct {
 }
 
 // GetTimeUsersTask
+//
 //	@Summary		Get total time spent by a user on tasks within a period
 //	@Description	Get total time spent by a user on tasks within a period
 //	@Tags			Tasks
@@ -165,26 +174,26 @@ func GetTimeUsersTask(c buffalo.Context) error {
 
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
-		log.Logger.Error().Msg("Start transaction error")
-		return c.Render(http.StatusInternalServerError, r.JSON("Internal server error"))
+		log.Logger.Error().Msg("Failed to start transaction")
+		return c.Render(http.StatusInternalServerError, r.String("Internal server error"))
 	}
 
 	userId, err = strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to convert user_id")
-		return c.Render(400, r.JSON("Invalid request"))
+		return c.Render(400, r.String("Invalid request"))
 	}
 	beginPeriod, err = time.Parse(http.TimeFormat, c.Param("begin_period"))
 	log.Logger.Debug().Msgf("begin_period: %s", c.Param("begin_period"))
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to convert begin_period")
-		return c.Render(400, r.JSON("Invalid request"))
+		return c.Render(400, r.String("Invalid request"))
 	}
 	endPeriod, err = time.Parse(http.TimeFormat, c.Param("end_period"))
 	log.Logger.Debug().Msgf("end_period: %s", c.Param("end_period"))
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to convert end_period")
-		return c.Render(400, r.JSON("Invalid request"))
+		return c.Render(400, r.String("Invalid request"))
 	}
 
 	query := `
@@ -214,11 +223,11 @@ func GetTimeUsersTask(c buffalo.Context) error {
 
 	var taskSums TaskSums
 	err = tx.RawQuery(query, beginPeriod, endPeriod, endPeriod, userId, endPeriod, beginPeriod).All(&taskSums)
-
 	if err != nil {
 		log.Logger.Error().Err(err).Msg("failed to calculate total time")
-		return c.Render(500, r.JSON("Internal server error"))
+		return c.Render(500, r.String("Internal server error"))
 	}
+	log.Logger.Debug().Msg("Total time was calculated")
 
 	return c.Render(200, r.JSON(taskSums))
 }
